@@ -1,0 +1,2 @@
+#MINI CDN PROJECT
+with GO
