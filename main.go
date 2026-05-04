@@ -1,19 +1,18 @@
 package main
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"net/http"
-	"crypto/sha256"
-	"encoding/hex"
 	"os"
 	"path/filepath"
 	"time"
 )
 
 const cacheDir = "cache"
-const cacheTTL = 1*time.Minute // 60 seconds cache expiration
-
+const cacheTTL = 1 * time.Minute // 60 seconds cache expiration
 
 func cacheKey(url string) string {
 	hash := sha256.Sum256([]byte(url))
@@ -25,8 +24,8 @@ func cachePath(url string) string {
 }
 
 func main() {
-		os.MkdirAll(cacheDir, 0755)
-    http.HandleFunc("/proxy", func(w http.ResponseWriter, r *http.Request) {
+	os.MkdirAll(cacheDir, 0755)
+	http.HandleFunc("/proxy", func(w http.ResponseWriter, r *http.Request) {
 		// get url from the query
 		url := r.URL.Query().Get("url")
 
@@ -41,20 +40,21 @@ func main() {
 		if fileInfo, err := os.Stat(filePath); err == nil {
 
 			// debug
-			fmt.Println("Cache age:", time.Since(fileInfo.ModTime()))
+			cacheAge := time.Since(fileInfo.ModTime())
+			fmt.Println("Cache age:", cacheAge)
 
-			if time.Since(fileInfo.ModTime()) <= cacheTTL {
+			if cacheAge <= cacheTTL {
 
 				w.Header().Set("X-Cache", "HIT")
 				fmt.Println("CACHE HIT")
-	
+
 				file, err := os.Open(filePath)
 				if err != nil {
 					http.Error(w, "Failed to read cache", http.StatusInternalServerError)
 					return
 				}
 				defer file.Close()
-	
+
 				io.Copy(w, file)
 				return
 			}
