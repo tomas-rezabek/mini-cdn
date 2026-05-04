@@ -11,7 +11,6 @@ import (
 	"time"
 )
 
-
 const cacheDir = "cache"
 const cacheTTL = 1 * time.Minute // 60 seconds cache expiration
 const originTimeout = 30 * time.Second
@@ -31,6 +30,38 @@ func cachePath(url string) string {
 
 func main() {
 	os.MkdirAll(cacheDir, 0755)
+	// PURGE ENDPOINT
+	http.HandleFunc("/purge", func(w http.ResponseWriter, r *http.Request) {
+		// get url from the query
+		url := r.URL.Query().Get("url")
+
+		if r.Method != http.MethodPost {
+			http.Error(w, "Method not allowed, must be POST", http.StatusMethodNotAllowed)
+			return
+		}
+
+		if url == "" {
+			http.Error(w, "Missing ?url", http.StatusBadRequest)
+			return
+		}
+
+		filePath := cachePath(url)
+
+		err := os.Remove(filePath)
+
+		if err != nil {
+			if os.IsNotExist(err) {
+				http.Error(w, "Cache not found", http.StatusNotFound)
+				return
+			}
+			http.Error(w, "Failed to delete cache file", http.StatusInternalServerError)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("Cache purged"))
+	})
+	// PROXY ENDPOINT
+
 	http.HandleFunc("/proxy", func(w http.ResponseWriter, r *http.Request) {
 		// get url from the query
 		url := r.URL.Query().Get("url")
@@ -48,7 +79,7 @@ func main() {
 			// debug
 			cacheAge := time.Since(fileInfo.ModTime())
 			fmt.Println("Cache age:", cacheAge)
-	
+
 			if cacheAge <= cacheTTL {
 
 				w.Header().Set("X-Cache", "HIT")
