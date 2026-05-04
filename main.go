@@ -48,7 +48,7 @@ func main() {
 			// debug
 			cacheAge := time.Since(fileInfo.ModTime())
 			fmt.Println("Cache age:", cacheAge)
-
+	
 			if cacheAge <= cacheTTL {
 
 				w.Header().Set("X-Cache", "HIT")
@@ -65,7 +65,11 @@ func main() {
 				return
 			}
 			fmt.Println("CACHE EXPIRED")
-
+			if err := os.Remove(filePath); err != nil {
+				fmt.Println("FAILED TO REMOVE CACHE FILE: ", err)
+			} else {
+				fmt.Println("CACHE FILE REMOVED")
+			}
 		}
 
 		// CACHE MISS
@@ -76,12 +80,12 @@ func main() {
 		}
 		defer resp.Body.Close()
 
-		cacheFile, err := os.Create(filePath)
+	//	cacheFile, err := os.Create(filePath)
 		if err != nil {
 			http.Error(w, "Failed to create cache file", http.StatusInternalServerError)
 			return
 		}
-		defer cacheFile.Close()
+	//	defer cacheFile.Close()
 
 		// setup cache header
 		w.Header().Set("X-Cache", "MISS")
