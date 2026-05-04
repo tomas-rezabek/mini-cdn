@@ -11,8 +11,14 @@ import (
 	"time"
 )
 
+
 const cacheDir = "cache"
 const cacheTTL = 1 * time.Minute // 60 seconds cache expiration
+const originTimeout = 30 * time.Second
+
+var httpClient = &http.Client{
+	Timeout: originTimeout
+}
 
 func cacheKey(url string) string {
 	hash := sha256.Sum256([]byte(url))
@@ -63,7 +69,7 @@ func main() {
 		}
 
 		// CACHE MISS
-		resp, err := http.Get(url)
+		resp, err := httpClient.Get(url)
 		if err != nil {
 			http.Error(w, "Failed to fetch origin", http.StatusBadGateway)
 			return
