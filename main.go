@@ -17,7 +17,7 @@ const cacheTTL = 1 * time.Minute // 60 seconds cache expiration
 const originTimeout = 30 * time.Second
 
 var httpClient = &http.Client{
-	Timeout: originTimeout
+	Timeout: originTimeout,
 }
 
 func cacheKey(url string) string {
