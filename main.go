@@ -80,12 +80,12 @@ func main() {
 		}
 		defer resp.Body.Close()
 
-	//	cacheFile, err := os.Create(filePath)
+		cacheFile, err := os.Create(filePath)
 		if err != nil {
 			http.Error(w, "Failed to create cache file", http.StatusInternalServerError)
 			return
 		}
-	//	defer cacheFile.Close()
+		defer cacheFile.Close()
 
 		// setup cache header
 		w.Header().Set("X-Cache", "MISS")
